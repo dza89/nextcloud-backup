@@ -2,6 +2,10 @@
 
 set -euo pipefail
 
+db_creds_env_file=""
+s3_creds_env_file=""
+override_s3_endpoints_url="--endpoint-url 'https://s3.eu-central-1.wasabisys.com'"
+
 docker exec --user www-data nextcloud php occ maintenance:mode --on
 
 docker_volume=$(docker volume create)
@@ -12,7 +16,7 @@ docker run --rm -v ${docker_volume}:/backups \
     -e MYSQL_HOST=nextcloud_mariadb \
     -e MYSQL_DUMP_TARGET=/backups \
     -e MYSQL_DATABASE=ncdb \
-    --env-file=/home/daan/.secrets/nc_db_user \
+    --env-file=${db_creds_env_file} \
     -t \
     mysql-backup
 
@@ -22,8 +26,8 @@ docker run --rm -v ${docker_volume}:/backups \
 #          backup-nc
 
 docker run --rm -v ${docker_volume}:/backups \
-    --env-file=/home/daan/.secrets/nc_s3 \
-    amazon/aws-cli s3 --endpoint-url 'https://s3.eu-central-1.wasabisys.com' cp --recursive /backups s3://nextcloud-volume-backup/backups
+    --env-file=${s3_creds_env_file} \
+    amazon/aws-cli s3 ${override_s3_endpoints_url} cp --recursive /backups s3://nextcloud-volume-backup/backups
 
 docker exec --user www-data nextcloud php occ maintenance:mode --off
 
