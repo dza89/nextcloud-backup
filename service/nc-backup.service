@@ -1,0 +1,5 @@
+[Unit]
+Description=Backup Nextcloud Configuration
+
+[Service]
+ExecStart=/opt/nextcloud/backup
